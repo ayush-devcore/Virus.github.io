@@ -1,275 +1,549 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Emergency</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: white;
-            touch-action: none;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .warning-container {
-            text-align: center;
-            padding: 20px;
-            max-width: 90%;
-        }
-        
-        h1 {
-            color: #ff0000;
-            font-size: 28px;
-            text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-            animation: blink 0.5s infinite alternate;
-        }
-        
-        .virus-alert {
-            background-color: rgba(255, 0, 0, 0.2);
-            border: 2px solid red;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        
-        .progress-container {
-            width: 100%;
-            background-color: #333;
-            border-radius: 10px;
-            margin: 25px 0;
-        }
-        
-        .progress-bar {
-            height: 30px;
-            background-color: #4CAF50;
-            border-radius: 8px;
-            width: 0%;
-            transition: width 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .button {
-            background-color: #ff0000;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 18px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        
-        .button:hover {
-            background-color: #cc0000;
-        }
-        
-        .error-message {
-            color: #ff9999;
-            font-size: 16px;
-            margin: 10px 0;
-        }
-        
-        @keyframes blink {
-            from { opacity: 1; }
-            to { opacity: 0.7; }
-        }
-        
-        .fake-touch {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            animation: ripple 1s forwards;
-            display: none;
-        }
-        
-        @keyframes ripple {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
-        }
-        
-        .system-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-        
-        .glitch-effect {
-            animation: glitch 1s linear infinite;
-        }
-        
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-3px, 3px); }
-            40% { transform: translate(-3px, -3px); }
-            60% { transform: translate(3px, 3px); }
-            80% { transform: translate(3px, -3px); }
-            100% { transform: translate(0); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070a" />
+  <title>System Recovery Console</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #05070a;
+      --panel: rgba(12, 17, 23, .92);
+      --line: rgba(132, 160, 180, .17);
+      --muted: #82909d;
+      --text: #e8eef3;
+      --red: #ff334f;
+      --amber: #ffb648;
+      --green: #54e0a0;
+      --cyan: #52d9ed;
+      --mono: "Consolas", "SFMono-Regular", "Roboto Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 50% 35%, rgba(102, 22, 35, .17), transparent 48%),
+        radial-gradient(ellipse at 80% 10%, rgba(27, 74, 91, .12), transparent 38%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .22;
+      background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, black, transparent 92%);
+    }
+
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+      opacity: .12;
+      background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(0,0,0,.38) 4px);
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(1120px, 100%);
+      height: 100svh;
+      min-height: 560px;
+      margin: auto;
+      padding: clamp(14px, 3vw, 30px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .topbar, .top-left, .top-right, .eyebrow, .status-pill, .metric-head,
+    .section-head, .progress-meta, .footer-row { display: flex; align-items: center; }
+    .topbar { justify-content: space-between; gap: 14px; min-height: 34px; }
+    .top-left, .top-right { gap: 12px; }
+    .brand-mark {
+      width: 27px; height: 27px; border: 1px solid rgba(255, 51, 79, .55);
+      color: var(--red); display: grid; place-items: center; border-radius: 7px;
+      font: 800 13px var(--mono); box-shadow: 0 0 20px rgba(255,51,79,.12);
+    }
+    .brand { font: 700 11px var(--mono); letter-spacing: .17em; color: #d9e1e8; }
+    .brand span { color: var(--muted); font-weight: 400; }
+    .system-clock { color: var(--muted); font: 11px var(--mono); letter-spacing: .06em; }
+    .status-pill {
+      gap: 7px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 99px;
+      background: rgba(255,255,255,.025); color: #aab8c3; font: 10px var(--mono); letter-spacing: .08em;
+    }
+    .dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; box-shadow: 0 0 10px var(--red); animation: pulse 1.3s ease-in-out infinite; }
+
+    .main-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(260px, .75fr); gap: 18px; }
+    .hero, .side-panel, .terminal {
+      border: 1px solid var(--line); background: linear-gradient(145deg, rgba(16,22,29,.96), rgba(8,12,17,.94));
+      box-shadow: 0 18px 60px rgba(0,0,0,.28); border-radius: 16px;
+    }
+    .hero { padding: clamp(20px, 4vw, 42px); display: flex; flex-direction: column; justify-content: center; min-height: 0; position: relative; overflow: hidden; }
+    .hero::after {
+      content: ""; position: absolute; width: 370px; height: 370px; right: -190px; top: -190px;
+      border: 1px solid rgba(255,51,79,.14); border-radius: 50%; box-shadow: 0 0 0 32px rgba(255,51,79,.025), 0 0 0 64px rgba(255,51,79,.018);
+      pointer-events: none;
+    }
+    .eyebrow { gap: 9px; color: var(--red); font: 700 10px var(--mono); letter-spacing: .2em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 23px; height: 1px; background: currentColor; box-shadow: 0 0 8px currentColor; }
+    h1 { max-width: 680px; margin: 19px 0 12px; font-size: clamp(36px, 6vw, 68px); line-height: .99; letter-spacing: -.055em; font-weight: 850; }
+    h1 .accent { display: block; color: var(--red); text-shadow: 0 0 28px rgba(255,51,79,.24); }
+    .subhead { max-width: 580px; margin: 0; color: #9aa8b4; font-size: clamp(13px, 1.6vw, 15px); line-height: 1.65; }
+    .alert-strip { display: flex; align-items: center; gap: 12px; padding: 13px 14px; margin: 26px 0 22px; border: 1px solid rgba(255,51,79,.27); border-left: 3px solid var(--red); background: rgba(255,51,79,.065); border-radius: 8px; }
+    .alert-icon { color: var(--red); font-size: 18px; }
+    .alert-copy { min-width: 0; }
+    .alert-copy strong { display: block; font: 700 10px var(--mono); letter-spacing: .11em; color: #ff7184; }
+    .alert-copy span { display: block; margin-top: 4px; color: #a9b3bc; font-size: 12px; }
+
+    .progress-wrap { margin-top: 2px; }
+    .progress-meta { justify-content: space-between; margin-bottom: 9px; color: #8d9ba7; font: 10px var(--mono); letter-spacing: .08em; }
+    .progress-track { height: 9px; overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 99px; background: #1c252d; }
+    .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a51c35, #ff405b 65%, #ff9b63); box-shadow: 0 0 18px rgba(255,51,79,.45); transition: width .18s linear; }
+    .progress-fill.done { background: linear-gradient(90deg, #15986a, #54e0a0); box-shadow: 0 0 18px rgba(84,224,160,.3); }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 23px; }
+    button { font: inherit; }
+    .primary-btn, .secondary-btn, .exit-btn {
+      border-radius: 8px; min-height: 46px; padding: 0 18px; cursor: pointer; transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .primary-btn { border: 1px solid #ff526a; color: white; background: linear-gradient(135deg, #da233f, #9d142d); font: 800 11px var(--mono); letter-spacing: .12em; box-shadow: 0 8px 24px rgba(195,24,52,.22); }
+    .primary-btn:hover { transform: translateY(-1px); background: linear-gradient(135deg, #f33451, #b71935); }
+    .secondary-btn, .exit-btn { border: 1px solid var(--line); background: rgba(255,255,255,.035); color: #a9b6c1; font: 700 10px var(--mono); letter-spacing: .08em; }
+    .secondary-btn:hover, .exit-btn:hover { border-color: rgba(255,255,255,.3); color: white; }
+    button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .side-column { min-height: 0; display: flex; flex-direction: column; gap: 18px; }
+    .side-panel { padding: 18px; }
+    .section-head { justify-content: space-between; margin-bottom: 15px; }
+    .section-title { color: #aebbc5; font: 700 10px var(--mono); letter-spacing: .14em; }
+    .tiny-label { color: #697884; font: 9px var(--mono); letter-spacing: .07em; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .metric { min-width: 0; padding: 13px; border-radius: 9px; border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.025); }
+    .metric-head { justify-content: space-between; gap: 6px; color: #82919d; font: 9px var(--mono); letter-spacing: .06em; }
+    .metric-value { margin-top: 10px; color: #e7edf2; font: 700 clamp(15px, 2vw, 20px) var(--mono); }
+    .metric-state { margin-top: 5px; color: var(--amber); font: 9px var(--mono); }
+    .metric-state.good { color: var(--green); }
+    .terminal { flex: 1; min-height: 150px; padding: 16px; overflow: hidden; }
+    .terminal-lines { display: flex; flex-direction: column; gap: 10px; color: #80919e; font: 10px/1.45 var(--mono); }
+    .terminal-line { display: flex; gap: 9px; overflow-wrap: anywhere; }
+    .terminal-line .time { flex: 0 0 auto; color: #52616d; }
+    .terminal-line .ok { color: var(--green); }
+    .terminal-line .warn { color: var(--amber); }
+    .terminal-line .bad { color: #ff7184; }
+    .cursor { display: inline-block; width: 6px; height: 12px; margin-left: 3px; vertical-align: -2px; background: var(--cyan); animation: blink .8s steps(2, start) infinite; }
+    .footer-row { justify-content: space-between; gap: 10px; color: #596875; font: 9px var(--mono); letter-spacing: .06em; }
+    .footer-row span:last-child { text-align: right; }
+
+    /* Five-second in-page input pause. Browser/OS navigation is never intercepted. */
+    .input-lock {
+      position: fixed; inset: 0; z-index: 100;
+      display: none; align-items: center; justify-content: center; flex-direction: column;
+      padding: 24px; text-align: center; background: rgba(2,4,7,.97);
+      touch-action: none; user-select: none;
+    }
+    .input-lock.active { display: flex; }
+    .lock-kicker { color: var(--red); font: 700 10px var(--mono); letter-spacing: .24em; }
+    .lock-count { margin: 16px 0 4px; color: white; font: 800 clamp(76px, 18vw, 140px)/1 var(--mono); letter-spacing: -.08em; text-shadow: 0 0 35px rgba(255,51,79,.28); }
+    .lock-title { color: #f2f5f7; font-size: clamp(17px, 3vw, 24px); font-weight: 800; letter-spacing: .08em; }
+    .lock-copy { max-width: 390px; margin-top: 10px; color: #81909c; font: 11px/1.65 var(--mono); }
+    .lock-line { width: min(340px, 75vw); height: 2px; margin-top: 25px; background: #242b32; overflow: hidden; }
+    .lock-line > span { display: block; width: 100%; height: 100%; background: var(--red); transform-origin: left; transform: scaleX(1); transition: transform .1s linear; }
+
+    .reveal {
+      position: fixed; inset: 0; z-index: 120; display: none; align-items: center; justify-content: center;
+      padding: 22px; background: rgba(2,5,8,.97); text-align: center;
+    }
+    .reveal.active { display: flex; }
+    .reveal-card { width: min(520px, 100%); padding: clamp(25px, 5vw, 44px); border: 1px solid rgba(84,224,160,.28); border-radius: 16px; background: linear-gradient(145deg, #0e1b19, #080e11); box-shadow: 0 0 70px rgba(40,190,130,.08); }
+    .reveal-icon { width: 54px; height: 54px; margin: 0 auto 18px; display: grid; place-items: center; border: 1px solid rgba(84,224,160,.4); border-radius: 50%; color: var(--green); font-size: 25px; }
+    .reveal h2 { margin: 0; color: var(--green); font-size: clamp(25px, 5vw, 36px); letter-spacing: -.04em; }
+    .reveal p { margin: 13px 0 22px; color: #a0b0b8; font-size: 13px; line-height: 1.7; }
+    .reveal .primary-btn { border-color: rgba(84,224,160,.55); background: linear-gradient(135deg, #147a58, #0b5944); }
+
+    .glitch { animation: glitch .32s steps(2, end) 1; }
+    .flash { animation: edgePulse .65s ease-out 1; }
+    @keyframes pulse { 50% { opacity: .35; } }
+    @keyframes blink { to { visibility: hidden; } }
+    @keyframes glitch {
+      0% { transform: translate(0); filter: none; }
+      25% { transform: translate(-2px, 1px); filter: hue-rotate(-15deg); }
+      50% { transform: translate(2px, -1px); }
+      75% { transform: translate(-1px, -1px); filter: saturate(1.4); }
+      100% { transform: translate(0); filter: none; }
+    }
+    @keyframes edgePulse { 0% { box-shadow: inset 0 0 0 0 rgba(255,51,79,0); } 35% { box-shadow: inset 0 0 0 5px rgba(255,51,79,.15); } 100% { box-shadow: inset 0 0 0 0 rgba(255,51,79,0); } }
+
+    @media (max-width: 760px) {
+      .shell { min-height: 100svh; height: 100svh; gap: 12px; padding: max(12px, env(safe-area-inset-top)) 13px max(12px, env(safe-area-inset-bottom)); }
+      .main-grid { display: flex; flex-direction: column; gap: 12px; overflow: auto; scrollbar-width: none; }
+      .main-grid::-webkit-scrollbar { display: none; }
+      .hero { flex: 0 0 auto; padding: 22px 19px; }
+      h1 { font-size: clamp(34px, 10vw, 54px); }
+      .alert-strip { margin: 19px 0 17px; }
+      .side-column { display: grid; grid-template-columns: 1fr; gap: 12px; }
+      .side-panel { padding: 14px; }
+      .terminal { min-height: 135px; }
+      .footer-row { font-size: 8px; }
+      .system-clock { display: none; }
+    }
+    @media (max-height: 680px) and (min-width: 761px) {
+      .shell { gap: 10px; padding-top: 14px; padding-bottom: 14px; }
+      .hero { padding-top: 20px; padding-bottom: 20px; }
+      h1 { font-size: clamp(34px, 5vw, 54px); margin-top: 12px; }
+      .alert-strip { margin: 16px 0; }
+      .side-panel { padding: 13px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+      .progress-fill { transition: none; }
+    }
+  </style>
 </head>
 <body>
-    <div class="warning-container">
-        <h1 class="glitch-effect">⚠️ SYSTEM MALFUNCTION ⚠️</h1>
-        <div class="virus-alert">
-            <p>CRITICAL ERROR: TOUCH INPUT COMPROMISED</p>
-            <p>Navigation controls disabled for security</p>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="shell" id="shell">
+    <header class="topbar">
+      <div class="top-left">
+        <div class="brand-mark">N</div>
+        <div class="brand">NEXUS <span>// SYSTEM RECOVERY</span></div>
+      </div>
+      <div class="top-right">
+        <div class="system-clock" id="clock">LOCAL TIME --:--:--</div>
+        <div class="status-pill"><span class="dot"></span><span id="topStatus">CRITICAL EVENT</span></div>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="hero" id="hero">
+        <div class="eyebrow">Emergency response protocol 09-A</div>
+        <h1 id="headline">SYSTEM <span class="accent">INTEGRITY FAILURE</span></h1>
+        <p class="subhead" id="subhead">The system interface has encountered an unexpected fault. An automated recovery sequence is ready to initialize.</p>
+
+        <div class="alert-strip">
+          <div class="alert-icon">⚠</div>
+          <div class="alert-copy">
+            <strong id="alertTitle">CRITICAL · INPUT SUBSYSTEM UNSTABLE</strong>
+            <span id="alertText">Interactive services are waiting for recovery authorization.</span>
+          </div>
         </div>
-        
-        <p class="error-message">Virus detected in system UI package</p>
-        <p class="error-message">Home/Back/Recent buttons disabled</p>
-        
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar">0%</div>
+
+        <div class="progress-wrap">
+          <div class="progress-meta"><span id="progressLabel">RECOVERY SEQUENCE</span><span id="progressPercent">0%</span></div>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         </div>
-        
-        <p>Attempting to restore system functions...</p>
-        <p id="statusMessage">Scanning for malware...</p>
-        
-        <button class="button" id="fixButton">EMERGENCY REPAIR</button>
-        
-        <div id="systemOverlay" class="system-overlay">
-            <h1 style="color: #4CAF50;">SYSTEM RESTORED</h1>
-            <p>Your device is now secure</p>
-            <p id="finalMessage">Just kidding! 😜 Your tablet is fine!</p>
-            <button class="button" style="background-color: #4CAF50;" id="closeButton">CLOSE</button>
+
+        <div class="actions" id="actions">
+          <button class="primary-btn" id="startButton">INITIATE RECOVERY&nbsp; ↗</button>
+          <button class="secondary-btn" id="soundButton" aria-pressed="false">SOUND: OFF</button>
         </div>
+      </section>
+
+      <aside class="side-column">
+        <section class="side-panel">
+          <div class="section-head"><span class="section-title">SUBSYSTEM TELEMETRY</span><span class="tiny-label">LIVE / LOCAL</span></div>
+          <div class="metrics">
+            <div class="metric"><div class="metric-head"><span>UI CORE</span><span>01</span></div><div class="metric-value" id="metricUi">FAULT</div><div class="metric-state" id="stateUi">ATTENTION</div></div>
+            <div class="metric"><div class="metric-head"><span>INPUT BUS</span><span>02</span></div><div class="metric-value" id="metricInput">UNSTABLE</div><div class="metric-state" id="stateInput">RESPONSE DELAY</div></div>
+            <div class="metric"><div class="metric-head"><span>MEMORY MAP</span><span>03</span></div><div class="metric-value" id="metricMemory">CHECK</div><div class="metric-state" id="stateMemory">VERIFYING</div></div>
+            <div class="metric"><div class="metric-head"><span>RECOVERY</span><span>04</span></div><div class="metric-value" id="metricRecovery">STANDBY</div><div class="metric-state" id="stateRecovery">AWAITING START</div></div>
+          </div>
+        </section>
+
+        <section class="terminal">
+          <div class="section-head"><span class="section-title">DIAGNOSTIC OUTPUT</span><span class="tiny-label">SYS.LOG</span></div>
+          <div class="terminal-lines" id="terminalLines" aria-live="polite">
+            <div class="terminal-line"><span class="time">[20:41:02]</span><span class="warn">warning:</span><span>interface integrity check pending</span></div>
+            <div class="terminal-line"><span class="time">[20:41:03]</span><span>recovery controller is standing by</span></div>
+            <div class="terminal-line"><span class="time">[20:41:04]</span><span>awaiting local authorization<span class="cursor"></span></span></div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footer-row"><span>NODE: LOCAL-DEVICE · SESSION: TEMPORARY</span><span>RECOVERY CONSOLE / BUILD 4.8.1</span></footer>
+  </div>
+
+  <div class="input-lock" id="inputLock" role="status" aria-live="assertive">
+    <div class="lock-kicker">INPUT CHANNEL INTERRUPTED</div>
+    <div class="lock-count" id="lockCount">5</div>
+    <div class="lock-title">RECOVERY HANDSHAKE</div>
+    <div class="lock-copy">Reinitializing local interface response. Please wait for the sequence to complete.</div>
+    <div class="lock-line"><span id="lockBar"></span></div>
+  </div>
+
+  <div class="reveal" id="reveal" role="dialog" aria-modal="true" aria-labelledby="revealTitle">
+    <div class="reveal-card">
+      <div class="reveal-icon">✓</div>
+      <h2 id="revealTitle">SYSTEM RESTORED</h2>
+      <p>This was a browser-only prank simulation. Your device, files, settings, and system controls were never accessed or changed.</p>
+      <button class="primary-btn" id="closeButton">CLOSE SIMULATION</button>
     </div>
-    
-    <div id="fakeTouch" class="fake-touch"></div>
-    
-    <script>
-        // Prevent default touch behaviors
-        document.addEventListener('touchmove', function(e) {
-            e.preventDefault();
-        }, { passive: false });
-        
-        document.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            // Show fake touch feedback
-            const touch = e.changedTouches[0];
-            const fakeTouch = document.getElementById('fakeTouch');
-            fakeTouch.style.display = 'block';
-            fakeTouch.style.left = touch.clientX + 'px';
-            fakeTouch.style.top = touch.clientY + 'px';
-            
-            setTimeout(() => {
-                fakeTouch.style.display = 'none';
-            }, 1000);
-        }, { passive: false });
-        
-        // Try to enter fullscreen (works on some devices)
-        function requestFullscreen() {
-            const elem = document.documentElement;
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen();
-            } else if (elem.webkitRequestFullscreen) { /* Safari */
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) { /* IE11 */
-                elem.msRequestFullscreen();
-            }
+  </div>
+
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const startButton = $('startButton');
+      const soundButton = $('soundButton');
+      const inputLock = $('inputLock');
+      const reveal = $('reveal');
+      const progressFill = $('progressFill');
+      const progressPercent = $('progressPercent');
+      const terminalLines = $('terminalLines');
+
+      let started = false;
+      let soundEnabled = false;
+      let sequenceTimer = null;
+      let lockTimer = null;
+      let audioContext = null;
+      let ended = false;
+
+      const stages = [
+        { at: 5, title: 'REBUILDING INTERFACE MAP', message: 'Reconstructing local interface state...', log: 'interface map reconstruction started', tone: 'warn' },
+        { at: 19, title: 'VERIFYING INPUT SERVICES', message: 'Checking response paths and event routing...', log: 'input service verification in progress', tone: 'warn' },
+        { at: 37, title: 'REPAIRING UI COMPONENTS', message: 'Restoring core visual components...', log: 'core component table refreshed', tone: 'ok' },
+        { at: 56, title: 'SYNCHRONIZING SYSTEM STATE', message: 'Synchronizing recovery checkpoints...', log: 'state synchronization checkpoint reached', tone: 'ok' },
+        { at: 78, title: 'FINAL VALIDATION', message: 'Running final interface integrity checks...', log: 'final validation pass initiated', tone: 'warn' },
+        { at: 94, title: 'RECOVERY ALMOST COMPLETE', message: 'Finalizing local interface response...', log: 'recovery controller reports stable state', tone: 'ok' }
+      ];
+
+      function timeStamp() {
+        return new Date().toLocaleTimeString([], { hour12: false });
+      }
+
+      function updateClock() {
+        $('clock').textContent = 'LOCAL TIME ' + timeStamp();
+      }
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      function addLog(message, type = '') {
+        const row = document.createElement('div');
+        row.className = 'terminal-line';
+        const time = document.createElement('span');
+        time.className = 'time';
+        time.textContent = '[' + timeStamp() + ']';
+        const status = document.createElement('span');
+        status.className = type;
+        status.textContent = type === 'ok' ? 'ok:' : type === 'bad' ? 'alert:' : type === 'warn' ? 'notice:' : 'sys:';
+        const content = document.createElement('span');
+        content.textContent = message;
+        row.append(time, status, content);
+        terminalLines.appendChild(row);
+        while (terminalLines.children.length > 6) terminalLines.removeChild(terminalLines.firstChild);
+      }
+
+      function beep(frequency = 440, duration = 0.09, volume = 0.035) {
+        if (!soundEnabled) return;
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          audioContext = audioContext || new AudioCtx();
+          if (audioContext.state === 'suspended') audioContext.resume();
+          const oscillator = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+          gain.gain.setValueAtTime(volume, audioContext.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+          oscillator.connect(gain);
+          gain.connect(audioContext.destination);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + duration);
+        } catch (_) { /* Audio is optional; visuals continue without it. */ }
+      }
+
+      soundButton.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        soundButton.textContent = 'SOUND: ' + (soundEnabled ? 'ON' : 'OFF');
+        soundButton.setAttribute('aria-pressed', String(soundEnabled));
+        if (soundEnabled) beep(520, .12, .025);
+      });
+
+      async function enterFullscreenFromGesture() {
+        const root = document.documentElement;
+        try {
+          if (root.requestFullscreen) await root.requestFullscreen();
+          else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+          // Some mobile browsers do not offer a general webpage fullscreen API.
+          // The simulation still works normally in the browser viewport.
+        } catch (_) {
+          addLog('fullscreen unavailable; continuing in browser view', 'warn');
         }
-        
-        // Simulate progress
+      }
+
+      function setMetric(valueId, stateId, value, state, good = false) {
+        $(valueId).textContent = value;
+        $(stateId).textContent = state;
+        $(stateId).classList.toggle('good', good);
+      }
+
+      function beginFiveSecondPause() {
+        inputLock.classList.add('active');
+        let remaining = 5;
+        const startedAt = performance.now();
+        $('lockCount').textContent = '5';
+        $('lockBar').style.transform = 'scaleX(1)';
+        beep(165, .18, .025);
+
+        lockTimer = setInterval(() => {
+          const elapsed = (performance.now() - startedAt) / 1000;
+          const left = Math.max(0, 5 - elapsed);
+          remaining = Math.ceil(left);
+          $('lockCount').textContent = String(remaining);
+          $('lockBar').style.transform = 'scaleX(' + (left / 5) + ')';
+          if (left <= 0) {
+            clearInterval(lockTimer);
+            lockTimer = null;
+            inputLock.classList.remove('active');
+            addLog('input response window restored', 'ok');
+            setMetric('metricInput', 'stateInput', 'ONLINE', 'RESPONSE NORMAL', true);
+            runRecoverySequence();
+          }
+        }, 50);
+      }
+
+      function runRecoverySequence() {
+        $('topStatus').textContent = 'RECOVERY ACTIVE';
+        $('alertTitle').textContent = 'RECOVERY · LOCAL INTERFACE REBUILD';
+        $('alertText').textContent = 'Recovery controller is processing the requested sequence.';
+        $('progressLabel').textContent = 'RESTORATION PROGRESS';
+        $('headline').innerHTML = 'SYSTEM <span class="accent">RECOVERY ACTIVE</span>';
+        $('subhead').textContent = 'The recovery controller is validating local interface components and rebuilding the response state.';
+        $('metricRecovery').textContent = 'ACTIVE';
+        $('stateRecovery').textContent = 'IN PROGRESS';
+        $('stateRecovery').classList.remove('good');
+        addLog('recovery controller engaged', 'ok');
+
         let progress = 0;
-        const progressBar = document.getElementById('progressBar');
-        const statusMessage = document.getElementById('statusMessage');
-        const messages = [
-            "Bypassing security protocols...",
-            "Accessing system partition...",
-            "Detecting malware variants...",
-            "Attempting to restore UI...",
-            "Finalizing repair..."
-        ];
-        
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 5;
-            if (progress > 100) progress = 100;
-            progressBar.style.width = progress + '%';
-            progressBar.textContent = Math.floor(progress) + '%';
-            
-            // Update status message based on progress
-            const messageIndex = Math.floor(progress / 20);
-            if (messageIndex < messages.length) {
-                statusMessage.textContent = messages[messageIndex];
-            }
-            
-            if (progress >= 100) {
-                clearInterval(progressInterval);
-            }
-        }, 500);
-        
-        // Emergency repair button
-        document.getElementById('fixButton').addEventListener('click', function() {
-            clearInterval(progressInterval);
-            progress = 100;
-            progressBar.style.width = '100%';
-            progressBar.textContent = '100%';
-            statusMessage.textContent = "Repair complete! Restarting UI...";
-            
-            // Show system overlay after delay
-            setTimeout(() => {
-                document.getElementById('systemOverlay').style.display = 'flex';
-            }, 2000);
-        });
-        
-        // Close button
-        document.getElementById('closeButton').addEventListener('click', function() {
-            document.getElementById('finalMessage').textContent = "But seriously, your tablet is fine! 😄";
-            setTimeout(() => {
-                // Exit fullscreen if possible
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) { /* Safari */
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) { /* IE11 */
-                    document.msExitFullscreen();
-                }
-            }, 1000);
-        });
-        
-        // Try to go fullscreen when page loads
-        window.onload = function() {
-            requestFullscreen();
-            
-            // Add vibration if supported
-            if (navigator.vibrate) {
-                navigator.vibrate([200, 100, 200, 100, 200]);
-            }
-            
-            // Random glitch effects
-            setInterval(() => {
-                if (Math.random() > 0.7) {
-                    document.querySelector('h1').classList.add('glitch-effect');
-                    setTimeout(() => {
-                        document.querySelector('h1').classList.remove('glitch-effect');
-                    }, 300);
-                }
-            }, 2000);
-        };
-    </script>
+        let stageIndex = -1;
+        const durationMs = 17000;
+        const startedAt = performance.now();
+
+        sequenceTimer = setInterval(() => {
+          if (ended) return;
+          const elapsed = performance.now() - startedAt;
+          progress = Math.min(100, (elapsed / durationMs) * 100);
+          const shown = Math.floor(progress);
+          progressFill.style.width = shown + '%';
+          progressPercent.textContent = shown + '%';
+
+          const nextStage = stages.reduce((acc, stage, index) => progress >= stage.at ? index : acc, -1);
+          if (nextStage > stageIndex) {
+            stageIndex = nextStage;
+            const stage = stages[stageIndex];
+            $('alertTitle').textContent = stage.title;
+            $('alertText').textContent = stage.message;
+            addLog(stage.log, stage.tone);
+            beep(300 + stageIndex * 65, .07, .018);
+          }
+
+          if (Math.random() > .965) {
+            $('hero').classList.remove('glitch');
+            void $('hero').offsetWidth;
+            $('hero').classList.add('glitch');
+          }
+          if (Math.random() > .985) {
+            document.body.classList.remove('flash');
+            void document.body.offsetWidth;
+            document.body.classList.add('flash');
+          }
+
+          if (progress >= 100) {
+            clearInterval(sequenceTimer);
+            sequenceTimer = null;
+            progressFill.classList.add('done');
+            $('topStatus').textContent = 'SYSTEM STABLE';
+            $('alertTitle').textContent = 'SUCCESS · INTERFACE VALIDATED';
+            $('alertText').textContent = 'All local recovery checks have completed.';
+            $('metricUi').textContent = 'ONLINE';
+            $('stateUi').textContent = 'NORMAL';
+            $('stateUi').classList.add('good');
+            $('metricMemory').textContent = 'CLEAR';
+            $('stateMemory').textContent = 'VERIFIED';
+            $('stateMemory').classList.add('good');
+            $('metricRecovery').textContent = '100%';
+            $('stateRecovery').textContent = 'COMPLETE';
+            $('stateRecovery').classList.add('good');
+            addLog('local recovery sequence completed', 'ok');
+            beep(660, .14, .025);
+            setTimeout(showReveal, 1100);
+          }
+        }, 120);
+      }
+
+      function showReveal() {
+        if (ended) return;
+        ended = true;
+        reveal.classList.add('active');
+      }
+
+      function exitFullscreen() {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+          else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+        } catch (_) { /* Browser may already have left fullscreen. */ }
+      }
+
+      function stopAndReveal() {
+        if (lockTimer) clearInterval(lockTimer);
+        if (sequenceTimer) clearInterval(sequenceTimer);
+        lockTimer = null;
+        sequenceTimer = null;
+        inputLock.classList.remove('active');
+        exitFullscreen();
+        reveal.classList.add('active');
+        ended = true;
+      }
+
+      startButton.addEventListener('click', async () => {
+        if (started) return;
+        started = true;
+        startButton.disabled = true;
+        soundButton.disabled = true;
+        $('topStatus').textContent = 'INITIALIZING';
+        $('metricRecovery').textContent = 'STARTING';
+        $('stateRecovery').textContent = 'HANDSHAKE';
+        addLog('recovery authorization received', 'warn');
+        await enterFullscreenFromGesture();
+        if (soundEnabled && audioContext && audioContext.state === 'suspended') {
+          try { await audioContext.resume(); } catch (_) {}
+        }
+        beginFiveSecondPause();
+      });
+
+      $('closeButton').addEventListener('click', () => {
+        exitFullscreen();
+        reveal.classList.remove('active');
+        $('topStatus').textContent = 'SESSION CLOSED';
+        $('headline').innerHTML = 'SESSION <span class="accent">COMPLETE</span>';
+        $('subhead').textContent = 'The browser-only simulation has ended. You can safely close this tab.';
+      });
+
+      // Escape is an emergency way to end the page effect. Browser Back/close
+      // and operating-system navigation remain available at all times.
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && started && !ended) stopAndReveal();
+      });
+
+      // Never suppress browser/OS navigation or global touch events.
+      // The overlay only intercepts interaction within this webpage during its
+      // five-second display; the browser's own controls remain outside our control.
+    })();
+  </script>
 </body>
 </html>
